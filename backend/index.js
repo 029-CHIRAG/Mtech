@@ -57,7 +57,9 @@ mongoose.connect(MONGO_URI, {
 });
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
-
+app.use("/api/status",(req,res)=>{
+  res.send("Server is live.")
+})
 // Mount routes
 app.use("/api/courses", courseRoutes);
 app.use("/api/forms", formRoutes);
