@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "./NewCourse.css";
+import './NewCourse.css';
 
 const NewCourse = () => {
   const [courseData, setCourseData] = useState({
