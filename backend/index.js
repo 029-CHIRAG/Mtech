@@ -410,7 +410,7 @@ app.put("/change-password", auth, async (req, res) => {
     res.status(500).json({ message: "Something went wrong. Try again later." });
   }
 });
-
-app.listen(3001, () => {
-  console.log("Server listening on http://127.0.0.1:3001");
+const PORT=process.env.PORT || 3001
+app.listen(PORT, () => {
+  console.log(`Server listening on http://localhost:${PORT}`);
 });
