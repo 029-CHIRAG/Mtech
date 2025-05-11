@@ -1,195 +1,142 @@
 const express = require("express");
 const router = express.Router();
 const Form = require("../models/Form");
-const ApplicationForm = require("../models/ApplicationForm");
 const Course = require("../models/Course");
 const { auth, authorize } = require("../middleware/auth");
-const { body, validationResult } = require("express-validator");
 
-// ✅ Save or update form structure (Only Content Admin)
-router.post(
-  "/save-form-structure", // Relative to /api/forms
-  auth,
-  authorize(["content_admin"]),
-  [
-    body("courseId").notEmpty().withMessage("Course ID is required"),
-    body("fields").isArray().withMessage("Fields must be an array"),
-    body("educationFields").isObject().withMessage("Education fields must be an object"),
-    body("sections").isArray().withMessage("Sections must be an array"),
-  ],
-  async (req, res) => {
-    try {
-      // Validate request body
-      const errors = validationResult(req);
-      console.log(errors)
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      const { courseId, fields, educationFields, sections } = req.body;
-
-      // Check if the course exists
-      const course = await Course.findById(courseId);
-      if (!course) {
-        return res.status(404).json({ error: "Course not found" });
-      }
-
-      // Save or update the form structure
-      const existingForm = await Form.findOne({ courseId });
-
-      if (existingForm) {
-        existingForm.fields = fields;
-        existingForm.educationFields = educationFields;
-        existingForm.sections = sections;
-        existingForm.createdBy = req.user.userId;
-        await existingForm.save();
-        return res.status(200).json({ message: "Form structure updated successfully", form: existingForm });
-      } else {
-        const newForm = new Form({ courseId, fields, educationFields, sections, createdBy: req.user.userId });
-        await newForm.save();
-        return res.status(201).json({ message: "Form structure created successfully", form: newForm });
-      }
-    } catch (error) {
-      console.error("Error saving form structure:", error);
-      res.status(500).json({ error: "Server error" });
-    }
-  }
-);
-
-// ✅ Get form structure for students
-router.get("/get-form-structure/:courseId", async (req, res) => {
+// Save or update form structure (Only Content Admin)
+router.post("/save-form-structure", auth, authorize(["content_admin"]), async (req, res) => {
   try {
-    const { courseId } = req.params;
+    const { courseId, educationFields, sections, requiredAcademicFields, requiredAcademicSubfields, requiredDocuments, programType } = req.body;
+    console.log("Received save-form-structure request:", req.body);
+
+    // Validate inputs
+    if (!courseId) {
+      return res.status(400).json({ message: "Course ID is required" });
+    }
 
     // Check if the course exists
     const course = await Course.findById(courseId);
     if (!course) {
-      return res.status(404).json({ error: "Course not found" });
+      return res.status(404).json({ message: "Course not found" });
     }
 
-    // Fetch the form structure
+    // Check if form structure exists
+    let form = await Form.findOne({ courseId });
+    if (form) {
+      // Update existing form
+      form.programType = programType || form.programType;
+      form.educationFields = educationFields || form.educationFields;
+      form.sections = sections || form.sections;
+      form.requiredAcademicFields = requiredAcademicFields || form.requiredAcademicFields;
+      form.requiredAcademicSubfields = requiredAcademicSubfields || form.requiredAcademicSubfields;
+      form.requiredDocuments = requiredDocuments || form.requiredDocuments;
+      await form.save();
+      console.log("Updated form with subfields:", form.requiredAcademicSubfields);
+      return res.status(200).json({ message: "Form structure updated successfully", form });
+    }
+
+    // Create new form structure
+    form = new Form({
+      courseId,
+      programType,
+      educationFields: educationFields || { tenth: false, twelfth: false, ug: false, pg: false },
+      sections: sections || [],
+      requiredAcademicFields: requiredAcademicFields || [],
+      requiredAcademicSubfields: requiredAcademicSubfields || {
+        tenth: {
+          percentage: false,
+          yearOfPassing: false,
+          board: false,
+          schoolName: false,
+          customFields: [],
+        },
+        twelth: {
+          percentage: false,
+          yearOfPassing: false,
+          board: false,
+          schoolName: false,
+          customFields: [],
+        },
+        graduation: {
+          percentage: false,
+          yearOfPassing: false,
+          university: false,
+          collegeName: false,
+          customFields: [],
+        },
+        postgraduate: {
+          percentage: false,
+          yearOfPassing: false,
+          university: false,
+          collegeName: false,
+          customFields: [],
+        },
+      },
+      requiredDocuments: requiredDocuments || [],
+    });
+    await form.save();
+    console.log("Created new form with subfields:", form.requiredAcademicSubfields);
+    res.status(201).json({ message: "Form structure saved successfully", form });
+  } catch (error) {
+    console.error("Error saving form structure:", error);
+    res.status(500).json({ message: "Server error while saving form structure", error: error.message });
+  }
+});
+
+// Get form structure (Content Admin or Student)
+// Get form structure (Content Admin or Student)
+router.get("/get-form-structure/:courseId", auth, async (req, res) => {
+  try {
+    const courseId = req.params.courseId;
+    console.log(`Fetching form structure for courseId: ${courseId}`);
     const form = await Form.findOne({ courseId });
     if (!form) {
-      return res.status(404).json({ error: "Form structure not found" });
+      console.log(`No form found for courseId: ${courseId}`);
+      return res.status(404).json({ message: "Form structure not found" });
     }
 
-    res.status(200).json({ fields: form.fields, educationFields: form.educationFields, sections: form.sections });
+    // Return the full form structure for both content admins and students
+    res.status(200).json({
+      programType: form.programType,
+      educationFields: form.educationFields || { tenth: false, twelfth: false, ug: false, pg: false },
+      sections: form.sections || [],
+      requiredAcademicFields: form.requiredAcademicFields || [],
+      requiredAcademicSubfields: form.requiredAcademicSubfields || {
+        tenth: {
+          percentage: false,
+          yearOfPassing: false,
+          board: false,
+          schoolName: false,
+          customFields: [],
+        },
+        twelth: {
+          percentage: false,
+          yearOfPassing: false,
+          board: false,
+          schoolName: false,
+          customFields: [],
+        },
+        graduation: {
+          percentage: false,
+          yearOfPassing: false,
+          university: false,
+          collegeName: false,
+          customFields: [],
+        },
+        postgraduate: {
+          percentage: false,
+          yearOfPassing: false,
+          university: false,
+          collegeName: false,
+          customFields: [],
+        },
+      },
+      requiredDocuments: form.requiredDocuments || [],
+    });
   } catch (error) {
     console.error("Error fetching form structure:", error);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// ✅ Submit application (Only authenticated students)
-router.post(
-  "/submit-application", // Relative to /api/forms
-  auth,
-  authorize(["student"]),
-  [
-    body("courseId").notEmpty().withMessage("Course ID is required"),
-    body("studentId").notEmpty().withMessage("Student ID is required"),
-    body("formData").isObject().withMessage("Form data must be an object"),
-    body("educationDetails").isObject().withMessage("Education details must be an object"),
-  ],
-  async (req, res) => {
-    try {
-      // Validate request body
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      const { courseId, studentId, formData, educationDetails } = req.body;
-
-      // Check if the course exists
-      const course = await Course.findById(courseId);
-      if (!course) {
-        return res.status(404).json({ error: "Course not found" });
-      }
-
-      // Save the application
-      const application = new ApplicationForm({ courseId, studentId, formData, educationDetails });
-      await application.save();
-
-      res.status(201).json({ message: "Application submitted successfully" });
-    } catch (error) {
-      console.error("Error submitting application:", error);
-      res.status(500).json({ error: "Server error" });
-    }
-  }
-);
-
-// ✅ Get submitted application for a student
-router.get("/get-application/:studentId/:courseId", auth, async (req, res) => {
-  try {
-    const { studentId, courseId } = req.params;
-
-    // Check if the course exists
-    const course = await Course.findById(courseId);
-    if (!course) {
-      return res.status(404).json({ error: "Course not found" });
-    }
-
-    // Fetch the application
-    const application = await ApplicationForm.findOne({ studentId, courseId });
-    if (!application) {
-      return res.status(404).json({ error: "Application not found" });
-    }
-
-    res.status(200).json(application);
-  } catch (error) {
-    console.error("Error fetching application:", error);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// ✅ Update course description (Only Content Admin)
-router.put(
-  "/update-course/:courseId", // Relative to /api/forms
-  auth,
-  authorize(["content_admin"]),
-  [body("description").notEmpty().withMessage("Description is required")],
-  async (req, res) => {
-    try {
-      // Validate request body
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      const { courseId } = req.params;
-      const { description } = req.body;
-
-      // Update the course description
-      const updatedCourse = await Course.findByIdAndUpdate(
-        courseId,
-        { description },
-        { new: true }
-      );
-
-      if (!updatedCourse) {
-        return res.status(404).json({ error: "Course not found" });
-      }
-
-      res.status(200).json({ message: "Course description updated", course: updatedCourse });
-    } catch (error) {
-      console.error("Error updating course:", error);
-      res.status(500).json({ error: "Server error" });
-    }
-  }
-);
-
-// ✅ Get course details including description (For Content Admin)
-router.get("/course/:courseId", async (req, res) => {
-  try {
-    const course = await Course.findById(req.params.courseId);
-    if (!course) {
-      return res.status(404).json({ error: "Course not found" });
-    }
-    res.status(200).json(course);
-  } catch (error) {
-    console.error("Error fetching course:", error);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ message: "Server error while fetching form structure" });
   }
 });
 

@@ -17,7 +17,7 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const res = await axios.post('http://localhost:3001/login', { email, password });
+            const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/login`, { email, password });
 
             // Destructure token, userId, and role from the response
             const { token, userId, role } = res.data;
@@ -39,7 +39,7 @@ const Login = () => {
                 } else if (role === "content_admin") {
                     navigate('/home');
                 } else {
-                    navigate('/home');
+                    navigate('/home'); //student or faculty both land to home
                 }
 
             } else {

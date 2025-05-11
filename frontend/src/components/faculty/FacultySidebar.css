@@ -1,0 +1,52 @@
+.faculty-sidebar {
+  width: 250px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f0f4ff, #dbeafe); /* light gradient */
+  color: #1e3a8a;
+  padding: 30px 20px;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+}
+
+.faculty-sidebar h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 40px;
+  text-align: center;
+  border-bottom: 2px solid #60a5fa; /* light blue */
+  padding-bottom: 10px;
+  color: #1e3a8a;
+}
+
+.faculty-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.faculty-sidebar li {
+  margin-bottom: 18px;
+}
+
+.faculty-sidebar a {
+  display: block;
+  font-size: 16px;
+  color: #1e3a8a;
+  padding: 10px 15px;
+  border-radius: 8px;
+  transition: background 0.3s ease, color 0.3s ease;
+  text-decoration: none;
+}
+
+.faculty-sidebar a:hover {
+  background-color: #bfdbfe; /* lighter hover */
+  color: #1d4ed8;
+}
+
+.faculty-sidebar a.active {
+  background-color: #93c5fd;
+  color: #1e3a8a;
+  border-left: 4px solid #1d4ed8;
+  padding-left: 11px;
+}

@@ -1,21 +1,27 @@
-/* Container */
-.app-container {
-  padding-top: 100px;
+/* Full Page Container */
+.full-page-container {
   display: flex;
-  height: 100vh;
+  flex-direction: row;
+  width: 100%;
+  min-height: calc(100vh - 80px); /* Adjusted for navbar height */
+}
+
+/* App Container */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   background: white;
-  margin-bottom: 200px;
 }
 
 /* Sidebar */
 .sidebar {
-  padding-top: 120px;
   width: 250px;
-  height: 600px;
   background: #2c3e50;
   padding: 20px;
   color: white;
   border-right: 3px solid #1abc9c;
+  margin-top: 0;
 }
 
 .sidebar h3 {
@@ -36,6 +42,9 @@
   background: #34495e;
   border-radius: 5px;
   transition: background 0.3s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .sidebar li:hover {
@@ -46,13 +55,21 @@
   background: #1abc9c;
 }
 
+.sidebar li.completed {
+  background: #27ae60;
+}
+
+.sidebar li .tick {
+  color: #fff;
+  font-size: 16px;
+}
+
 /* Form Container */
 .form-container {
   flex: 1;
-  height: 90vh;
-  padding: 30px;
-  margin-top: 70px; /* Push the form below the header */
-  margin-bottom: 70px; /* Push form above footer */
+  padding: 20px;
+  margin-top: 0; /* Align with sidebar */
+  margin-bottom: 50px; /* Space for footer */
 }
 
 .form-container h2 {
@@ -60,6 +77,49 @@
   border-bottom: 2px solid #1abc9c;
   padding-bottom: 5px;
   margin-bottom: 20px;
+}
+
+/* Popup Message */
+.popup-message {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px 40px;
+  border-radius: 10px;
+  color: white; /* Ensure text is white for visibility */
+  background: #34495e; /* Default background */
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  animation: popInOut 4s ease-in-out; /* Increased duration for readability */
+  font-size: 18px; /* Slightly larger text */
+  font-weight: bold; /* Bold for emphasis */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); /* Enhance contrast */
+}
+
+.popup-message.success {
+  background: #2ecc71; /* Brighter green for success */
+  color: white; /* Explicitly set for consistency */
+}
+
+.popup-message.error {
+  background: #e74c3c; /* Red for error */
+  color: white; /* Explicitly set for visibility */
+}
+
+.popup-icon {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+@keyframes popInOut {
+  0% { opacity: 0; transform: translate(-50%, -60%); scale: 0.8; }
+  10% { opacity: 1; transform: translate(-50%, -50%); scale: 1; }
+  90% { opacity: 1; transform: translate(-50%, -50%); scale: 1; }
+  100% { opacity: 0; transform: translate(-50%, -60%); scale: 0.8; }
 }
 
 /* Button Styling */
@@ -79,58 +139,187 @@ button:hover {
   background-color: #45a049;
 }
 
-.complete-btn {
-  margin-top: 10px;
-  padding: 8px 15px;
-  background: green;
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.view-btn, .edit-btn {
+  background-color: #3498db;
+}
+
+.view-btn:hover, .edit-btn:hover {
+  background-color: #2980b9;
+}
+
+/* View Modal */
+.view-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.view-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.view-section {
+  margin-bottom: 20px;
+}
+
+.view-section h3 {
+  color: #2c3e50;
+  border-bottom: 2px solid #1abc9c;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+.view-section p {
+  margin: 5px 0;
+}
+
+.view-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+/* Form Sections */
+.personal-details,
+.contact-information,
+.parent-details,
+.academic-details,
+.document-upload,
+.declaration {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.personal-details label,
+.contact-information label,
+.parent-details label,
+.academic-details label,
+.document-upload label,
+.declaration label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+.personal-details input,
+.personal-details select,
+.contact-information input,
+.contact-information textarea,
+.parent-details input,
+.academic-details input,
+.academic-details select,
+.academic-details textarea,
+.document-upload input,
+.document-upload select,
+.declaration input,
+.declaration textarea {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 100%;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.personal-details input:hover,
+.personal-details select:hover,
+.contact-information input:hover,
+.contact-information textarea:hover,
+.parent-details input:hover,
+.academic-details input:hover,
+.academic-details select:hover,
+.academic-details textarea:hover,
+.document-upload input:hover,
+.document-upload select:hover,
+.declaration input:hover,
+.declaration textarea:hover {
+  cursor: pointer;
+}
+
+.personal-details input:focus,
+.personal-details select:focus,
+.contact-information input:focus,
+.contact-information textarea:focus,
+.parent-details input:focus,
+.academic-details input:focus,
+.academic-details select:focus,
+.academic-details textarea:focus,
+.document-upload input:focus,
+.document-upload select:focus,
+.declaration input:focus,
+.declaration textarea:focus {
+  border-color: #1abc9c;
+  box-shadow: 0 0 5px rgba(26, 188, 156, 0.5);
+  background-color: #fff;
+}
+
+/* Document Upload */
+.document-selector {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.document-list {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.document-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.document-row span {
+  flex: 1;
+  font-weight: bold;
+}
+
+.document-row input[type="file"] {
+  flex: 2;
+}
+
+.document-row button {
+  flex: 0;
+}
+
+.document-upload input[type="file"]::file-selector-button {
+  background-color: #1abc9c;
   color: white;
+  padding: 8px 15px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
 }
 
-.complete-btn:hover {
-  background: darkgreen;
-}
-
-/* Personal Details Form */
-.personal-details {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.personal-details label {
-  font-weight: bold;
-  margin-top: 8px;
-}
-
-.personal-details input,
-.personal-details select {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  width: 100%;
-}
-
-/* Contact Information Form */
-.contact-information {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.contact-information label {
-  font-weight: bold;
-  margin-top: 8px;
-}
-
-.contact-information input,
-.contact-information textarea {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  width: 100%;
+.document-upload input[type="file"]::file-selector-button:hover {
+  background-color: #16a085;
 }
 
 /* Academic Details */
@@ -139,10 +328,6 @@ button:hover {
   border: 1px solid #ddd;
   border-radius: 8px;
   margin-top: 20px;
-}
-
-.accordion-section {
-  margin-bottom: 10px;
 }
 
 .accordion {
@@ -178,331 +363,108 @@ button:hover {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  margin-bottom: 20px;
 }
 
-.academic-information label {
-  font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 5px;
-  color: #555;
-}
-
-.academic-information input,
-.academic-information select,
-.academic-information textarea {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 14px;
-  width: 100%;
-}
-
-/* Align labels to the left */
-.personal-details,
-.contact-information,
-.academic-information,
-.parent-details,
-.document-upload,
-.declaration-section {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.personal-details label,
-.contact-information label,
-.academic-information label,
-.parent-details label,
-.document-upload label,
-.declaration-section label {
-  display: flex;
-  justify-content: flex-start; /* Align label text to the left */
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-/* Ensure form fields take full width */
-.personal-details input,
-.personal-details select,
-.contact-information input,
-.contact-information textarea,
-.academic-information input,
-.academic-information select,
-.academic-information textarea,
-.parent-details input,
-.parent-details textarea,
-.document-upload input,
-.document-upload select,
-.document-upload textarea,
-.declaration-section input {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-/* Button Spacing */
-.button-container {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-
-.button-container .back-btn {
-  margin-right: 20px; /* Add space between Back and Next buttons */
-}
-
-.academic-information input[type="text"],
-.academic-information input[type="date"] {
-  height: 35px;
-}
-
-.academic-information input[type="tel"],
-.academic-information input[type="email"],
-.academic-information input[type="number"] {
-  height: 35px;
-}
-
-.academic-information select {
-  height: 35px;
-}
-
-.academic-information textarea {
-  height: 80px;
-}
-
-.academic-information .form-btn {
-  margin-top: 15px;
-  padding: 10px 20px;
-  background-color: #4CAF50;
-  color: white;
-  font-size: 16px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.academic-information .form-btn:hover {
-  background-color: #45a049;
-}
-
-.academic-details .error-message {
-  color: red;
-  font-size: 12px;
-}
-
-.academic-details select,
-.academic-details input {
-  background-color: #f9f9f9;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.academic-details select:focus,
-.academic-details input:focus {
-  background-color: #fff;
-  box-shadow: 0 0 10px rgba(0, 0, 255, 0.2);
-}
-
-/* Parent Details Section */
-.parent-details {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.parent-details label {
-  font-weight: bold;
-  margin-top: 8px;
-}
-
-.parent-details input,
-.parent-details textarea {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  width: 100%;
-}
-
-.parent-details input[type="tel"],
-.parent-details input[type="text"],
-.parent-details input[type="email"] {
-  height: 35px;
-}
-
-.parent-details textarea {
-  height: 80px;
-}
-
-.parent-details .form-btn {
-  margin-top: 15px;
-  padding: 10px 20px;
-  background-color: #4CAF50;
-  color: white;
-  font-size: 16px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.parent-details .form-btn:hover {
-  background-color: #45a049;
-}
-
-/* Styling for Input Focus */
-.parent-details input:focus,
-.parent-details textarea:focus {
-  background-color: #fff;
-  box-shadow: 0 0 10px rgba(0, 0, 255, 0.2);
-}
-
-/* Optional Error Message Styling */
-.parent-details .error-message {
-  color: red;
-  font-size: 12px;
-}
-
-/* Document Upload Section */
-.document-upload {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.document-upload label {
-  font-weight: bold;
-  color: #555;
-}
-
-.document-upload input[type="file"],
-.document-upload select,
-.document-upload textarea {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  width: 100%;
-}
-
-.document-upload input[type="file"] {
-  background-color: #f9f9f9;
-  padding: 10px;
-}
-
-.document-upload select {
-  height: 35px;
-}
-
-.document-upload textarea {
-  height: 80px;
-}
-
-.document-upload .form-btn {
-  margin-top: 15px;
-  padding: 10px 20px;
-  background-color: #4CAF50;
-  color: white;
-  font-size: 16px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.document-upload .form-btn:hover {
-  background-color: #45a049;
-}
-
-/* Styling for the input on focus */
-.document-upload input[type="file"]:focus,
-.document-upload select:focus,
-.document-upload textarea:focus {
-  border-color: #1abc9c;
-  box-shadow: 0 0 5px rgba(26, 188, 156, 0.5);
-}
-
-.document-upload input[type="file"]::file-selector-button {
-  background-color: #1abc9c;
-  color: white;
+.add-btn,
+.remove-btn,
+.save-btn {
   padding: 8px 15px;
-  border: none;
   border-radius: 5px;
-  cursor: pointer;
 }
 
-.document-upload input[type="file"]::file-selector-button:hover {
+.add-btn {
+  background-color: #1abc9c;
+}
+
+.add-btn:hover {
   background-color: #16a085;
 }
 
-/* Declaration Section */
-.declaration-section {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.remove-btn {
+  background-color: #e74c3c;
+}
+
+.remove-btn:hover {
+  background-color: #c0392b;
+}
+
+.save-btn {
+  background-color: #4CAF50;
+}
+
+.save-btn:hover {
+  background-color: #45a049;
+}
+
+/* Declaration */
+.declaration p {
+  background: #f9f9f9;
   padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 20px;
 }
 
-.declaration-section label {
-  font-weight: bold;
-  font-size: 14px;
-  color: #555;
-}
-
-.declaration-section .agreement-checkbox {
+.declaration .agreement-checkbox {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.declaration-section input[type="text"],
-.declaration-section input[type="checkbox"] {
-  margin: 10px 0;
-}
-
-.declaration-section input[type="text"] {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  width: 100%;
-}
-
-.declaration-section .submit-btn {
-  padding: 12px 20px;
-  background-color: #4CAF50;
-  color: white;
-  font-size: 16px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  width: 100%;
-}
-
-.declaration-section .submit-btn:hover {
-  background-color: #45a049;
-}
-
-/* Styling for the input on focus */
-.declaration-section input[type="text"]:focus {
-  border-color: #1abc9c;
-  box-shadow: 0 0 5px rgba(26, 188, 156, 0.5);
-}
-
-.declaration-section input[type="checkbox"]:checked {
-  background-color: #1abc9c;
-}
-
-/* Checkbox styling */
-.declaration-section input[type="checkbox"] {
+.declaration input[type="checkbox"] {
   transform: scale(1.2);
   cursor: pointer;
 }
 
+.declaration input[type="checkbox"]:checked {
+  background-color: #1abc9c;
+}
 
+/* Error Messages */
+.error {
+  color: red;
+  font-size: 12px;
+  margin-top: 5px;
+}
 
+/* Form Navigation */
+.form-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
 
+/* Ensure footer stays below */
+footer {
+  position: relative;
+  z-index: 1;
+  background: #2c3e50;
+  color: white;
+  padding: 20px;
+  text-align: center;
+  width: 100%;
+}
 
-
-
-
-
-
-
-
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .full-page-container {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    min-height: auto;
+  }
+  .form-container {
+    margin-top: 0;
+    margin-bottom: 30px;
+  }
+  .document-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .popup-message {
+    padding: 15px 30px;
+    font-size: 16px;
+  }
+}

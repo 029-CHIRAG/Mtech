@@ -4,7 +4,8 @@
   --primary-light: #4895ef;
   --secondary: #3f37c9;
   --success: #4cc9f0;
-  --danger: #f72585;
+  --danger: #dc3545; /* Changed from #f72585 for less vibrant red */
+  --danger-dark: #c82333; /* Darker red for hover/confirm */
   --warning: #f8961e;
   --dark: #1e2a38;
   --light: #f8f9fa;
@@ -20,7 +21,7 @@
 
 body {
   margin: 0;
-  padding: 50px 0 ;
+  padding: 50px 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: #f5f7fa;
   transition: background-color 0.3s ease;
@@ -625,39 +626,56 @@ body.dark-mode {
 .filter-tabs {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .filter-tab {
-  background-color: var(--gray-light);
-  border: none;
-  border-radius: 8px;
-  padding: 10px 16px;
+  background-color: #d1d9e0; /* Darker background for light mode */
+  color: #343a40; /* Darker text for readability */
+  border: 1px solid #c4ced7; /* Subtle border */
+  border-radius: 20px; /* Rounded corners */
+  padding: 10px 20px;
   font-size: 14px;
+  font-weight: 500; /* Bolder text */
   cursor: pointer;
   transition: var(--transition);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
 }
 
 .filter-tab:hover {
-  background-color: #e2e6ea;
+  background-color: #c4ced7; /* Slightly darker on hover */
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* Enhanced shadow */
 }
 
 .filter-tab.active {
-  background-color: var(--primary);
+  background-color: var(--primary); /* #4361ee for active state */
   color: white;
+  border-color: var(--primary);
+  box-shadow: 0 4px 8px rgba(67, 97, 238, 0.3); /* Stronger shadow */
 }
 
 .dark-theme .filter-tab {
-  background-color: #2a3a4a;
-  color: var(--light);
+  background-color: #5a6a7a; /* Darker background for dark mode */
+  color: #e9ecef; /* Lighter text for readability */
+  border-color: #6a7a8a;
 }
 
 .dark-theme .filter-tab:hover {
-  background-color: #3a4a5a;
+  background-color: #6a7a8a; /* Slightly lighter on hover */
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.dark-theme .filter-tab.active {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 4px 8px rgba(67, 97, 238, 0.3);
 }
 
 /* Error Message */
 .error-message {
-  background-color: rgba(247, 37, 133, 0.1);
+  background-color: rgba(220, 53, 69, 0.1); /* Updated to match --danger */
   border-left: 4px solid var(--danger);
   padding: 15px;
   border-radius: 4px;
@@ -668,7 +686,6 @@ body.dark-mode {
 }
 
 @keyframes shake {
-
   0%,
   100% {
     transform: translateX(0);
@@ -735,54 +752,202 @@ body.dark-mode {
 /* Users Grid */
 .users-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: 1fr; /* Single column for horizontal cards */
   gap: 20px;
+  padding: 10px;
 }
 
 /* User Card Styles */
 .user-card {
   background-color: white;
-  border-radius: var(--border-radius);
+  border-radius: 12px;
   box-shadow: var(--shadow-card);
   overflow: hidden;
   transition: var(--transition);
   animation: fadeInUp 0.5s ease both;
   transform: translateY(20px);
   opacity: 0;
+  border: 2px solid var(--gray-light);
+  height: 100px; /* Fixed height for horizontal cards */
 }
 
 .dark-theme .user-card {
   background-color: #2a3a4a;
-}
-
-.user-card:hover {
-  transform: translateY(-5px) scale(1.02);
-  box-shadow: var(--shadow-hover);
-}
-
-.user-card-header {
-  padding: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--gray-light);
-}
-
-.dark-theme .user-card-header {
   border-color: #3a4a5a;
 }
 
+.user-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--primary);
+}
+
+.user-card-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 100%;
+  padding: 10px 15px;
+}
+
+.user-card-header {
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+}
+
 .user-avatar {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   background: linear-gradient(45deg, var(--primary) 0%, var(--primary-light) 100%);
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   color: white;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: bold;
+  border: 2px solid white;
+}
+
+.dark-theme .user-avatar {
+  border-color: var(--dark);
+}
+
+.user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-right: 15px;
+}
+
+.user-name {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.user-email {
+  margin: 0;
+  color: var(--gray);
+  font-size: 12px;
+  word-break: break-word;
+}
+
+.dark-theme .user-email {
+  color: var(--gray-light);
+}
+
+.user-role {
+  margin-top: 4px;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.role-badge.student {
+  background-color: rgba(76, 201, 240, 0.1);
+  color: var(--success);
+}
+
+.role-badge.admin {
+  background-color: rgba(63, 55, 201, 0.1);
+  color: var(--secondary);
+}
+
+.role-badge.content_admin {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+}
+
+.role-badge.faculty {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}
+
+.role-badge.verification_admin {
+  background-color: rgba(111, 66, 193, 0.1);
+  color: #6f42c1;
+}
+
+.role-badge.verification_officer {
+  background-color: rgba(253, 126, 20, 0.1);
+  color: #fd7e14;
+}
+
+.dark-theme .role-badge.student {
+  background-color: rgba(76, 201, 240, 0.3);
+}
+
+.dark-theme .role-badge.admin {
+  background-color: rgba(63, 55, 201, 0.3);
+}
+
+.dark-theme .role-badge.content_admin {
+  background-color: rgba(255, 193, 7, 0.3);
+}
+
+.dark-theme .role-badge.faculty {
+  background-color: rgba(40, 167, 69, 0.3);
+}
+
+.dark-theme .role-badge.verification_admin {
+  background-color: rgba(111, 66, 193, 0.3);
+}
+
+.dark-theme .role-badge.verification_officer {
+  background-color: rgba(253, 126, 20, 0.3);
+}
+
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-actions a,
+.user-actions button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  font-weight: 500;
+}
+
+.btn-view {
+  background-color: rgba(67, 97, 238, 0.1);
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.btn-view:hover {
+  background-color: var(--primary);
+  color: white;
+}
+
+.btn-delete {
+  background-color: rgba(220, 53, 69, 0.1); /* Updated to match --danger */
+  color: var(--danger);
+}
+
+.btn-delete:hover {
+  background-color: var(--danger);
+  color: white;
+}
+
+.user-actions svg {
+  margin-right: 4px;
 }
 
 .user-card-menu {
@@ -794,8 +959,7 @@ body.dark-mode {
   border: none;
   cursor: pointer;
   color: var(--gray);
-  font-size: 18px;
-  display: flex;
+  font-size: 16px;
   padding: 5px;
   border-radius: 4px;
   transition: var(--transition);
@@ -873,102 +1037,7 @@ body.dark-mode {
 }
 
 .user-menu .menu-item.delete:hover {
-  background-color: rgba(247, 37, 133, 0.1);
-}
-
-.user-info {
-  padding: 20px;
-}
-
-.user-name {
-  margin: 0 0 5px;
-  font-size: 18px;
-}
-
-.user-email {
-  margin: 0 0 15px;
-  color: var(--gray);
-  font-size: 14px;
-}
-
-.dark-theme .user-email {
-  color: var(--gray-light);
-}
-
-.user-role {
-  margin-bottom: 15px;
-}
-
-.role-badge {
-  display: inline-block;
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.role-badge.admin {
-  background-color: rgba(63, 55, 201, 0.1);
-  color: var(--secondary);
-}
-
-.dark-theme .role-badge.admin {
-  background-color: rgba(63, 55, 201, 0.3);
-}
-
-.role-badge.user {
-  background-color: rgba(76, 201, 240, 0.1);
-  color: var(--success);
-}
-
-.dark-theme .role-badge.user {
-  background-color: rgba(76, 201, 240, 0.3);
-}
-
-.user-actions {
-  padding: 0 20px 20px;
-  display: flex;
-  gap: 10px;
-}
-
-.user-actions a,
-.user-actions button {
-  flex: 1;
-  padding: 10px;
-  border-radius: 6px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 14px;
-  cursor: pointer;
-  transition: var(--transition);
-  border: none;
-  font-weight: 500;
-}
-
-.btn-view {
-  background-color: rgba(67, 97, 238, 0.1);
-  color: var(--primary);
-  text-decoration: none;
-}
-
-.btn-view:hover {
-  background-color: var(--primary);
-  color: white;
-}
-
-.btn-delete {
-  background-color: rgba(247, 37, 133, 0.1);
-  color: var(--danger);
-}
-
-.btn-delete:hover {
-  background-color: var(--danger);
-  color: white;
-}
-
-.user-actions svg {
-  margin-right: 5px;
+  background-color: rgba(220, 53, 69, 0.1); /* Updated to match --danger */
 }
 
 /* No Users Found */
@@ -1034,17 +1103,19 @@ body.dark-mode {
 
 .delete-modal {
   background-color: white;
-  border-radius: var(--border-radius);
-  width: 400px;
+  border-radius: 16px; /* Increased for smoother look */
+  width: 450px; /* Slightly wider for better spacing */
   max-width: 90%;
   padding: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25); /* Softer, deeper shadow */
   animation: modalIn 0.3s ease;
+  border: 1px solid var(--gray-light); /* Subtle border */
 }
 
 .dark-theme .delete-modal {
-  background-color: #1e2a38;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  background-color: #2a3a4a;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  border-color: #3a4a5a;
 }
 
 @keyframes modalIn {
@@ -1062,7 +1133,7 @@ body.dark-mode {
 .modal-icon {
   width: 60px;
   height: 60px;
-  background-color: rgba(247, 37, 133, 0.1);
+  background-color: rgba(220, 53, 69, 0.1); /* Updated to match --danger */
   color: var(--danger);
   border-radius: 50%;
   display: flex;
@@ -1070,18 +1141,21 @@ body.dark-mode {
   align-items: center;
   font-size: 24px;
   margin: 0 auto 20px;
+  border: 2px solid var(--danger); /* Added border for emphasis */
 }
 
 .delete-modal h3 {
   text-align: center;
   margin: 0 0 15px;
-  font-size: 20px;
+  font-size: 22px; /* Slightly larger for prominence */
+  font-weight: 600;
 }
 
 .delete-modal p {
   text-align: center;
   margin: 0 0 25px;
   color: var(--gray);
+  font-size: 15px;
 }
 
 .dark-theme .delete-modal p {
@@ -1095,8 +1169,8 @@ body.dark-mode {
 }
 
 .modal-actions button {
-  padding: 10px 20px;
-  border-radius: 6px;
+  padding: 12px 24px; /* Increased padding for better click area */
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -1131,7 +1205,7 @@ body.dark-mode {
 }
 
 .btn-confirm:hover {
-  background-color: #d91a75;
+  background-color: var(--danger-dark);
 }
 
 .btn-confirm svg {
@@ -1215,6 +1289,27 @@ body.dark-mode {
   .dashboard-main {
     margin-left: 70px;
   }
+
+  .user-card-content {
+    flex-direction: column; /* Stack horizontally on smaller screens */
+    align-items: flex-start;
+    height: auto;
+    padding: 15px;
+  }
+
+  .user-card {
+    height: auto;
+  }
+
+  .user-info {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+
+  .user-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1222,6 +1317,7 @@ body.dark-mode {
     grid-template-columns: 1fr;
   }
 }
+
 /* Additional Styles for Enhanced UI */
 
 /* Admin Profile Enhancements */
@@ -1274,12 +1370,12 @@ body.dark-mode {
 /* User Card Enhancements */
 .user-card {
   border: 2px solid var(--gray-light);
-  border-radius: 16px;
+  border-radius: 12px;
   transition: all 0.3s ease-in-out;
 }
 
 .user-card:hover {
-  transform: translateY(-5px) scale(1.03);
+  transform: translateY(-5px);
   border-color: var(--primary);
 }
 
@@ -1296,22 +1392,15 @@ body.dark-mode {
 
 /* Delete Modal Enhancements */
 .delete-modal {
-  background: linear-gradient(135deg, #f72585, #d91a75);
-  color: #fff;
-  padding: 30px 40px;
-  border-radius: 20px;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--gray-light);
 }
 
-.modal-actions .btn-confirm {
-  background-color: #d91a75;
-  border-radius: 8px;
-  padding: 10px 20px;
-}
-
-.modal-actions .btn-cancel {
-  background-color: var(--gray-light);
-  border-radius: 8px;
-  padding: 10px 20px;
+.dark-theme .delete-modal {
+  background-color: #2a3a4a;
+  border-color: #3a4a5a;
 }
 
 /* Custom Scrollbar */

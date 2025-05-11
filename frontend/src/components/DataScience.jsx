@@ -8,7 +8,7 @@ const DataScience = () => {
   const [course, setCourse] = useState(null);
 
   useEffect(() => {
-    axios.get(`http://127.0.0.1:3001/api/courses/1`) // Fetch course details
+    axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/courses/1`) // Fetch course details
       .then(response => setCourse(response.data))
       .catch(error => console.error("Error fetching course details:", error));
   }, []);

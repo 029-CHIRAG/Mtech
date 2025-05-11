@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { useAuth } from "../context/authContext";
+import { useAuth } from '../context/authContext';
 import { FaUserPlus, FaEye, FaTrash, FaSearch, FaUsers, FaChartLine, FaUserShield } from 'react-icons/fa';
 import { RiAdminFill, RiDashboardLine } from 'react-icons/ri';
 import { BiLoaderAlt } from 'react-icons/bi';
@@ -9,33 +9,35 @@ import { MdEmail, MdOutlineVerified } from 'react-icons/md';
 import { BsThreeDotsVertical, BsShieldLock } from 'react-icons/bs';
 import './AdminDashboard.css';
 
+// Main AdminDashboard component
 const AdminDashboard = () => {
+  // State declarations
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [activeFilter, setActiveFilter] = useState('all');
   const [showUserMenu, setShowUserMenu] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const { currentUser } = useAuth();
 
+  // Effect for dark mode and fetching users
   useEffect(() => {
     document.body.className = darkMode ? 'dark-mode' : '';
 
     const fetchUsers = async () => {
       setLoading(true);
       try {
-        // Simulate a slight delay to show the loading state
+        // Simulate delay for loading state
         await new Promise(resolve => setTimeout(resolve, 800));
-
-        const res = await axios.get("http://localhost:3001/api/users", {
-          headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/users`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         setUsers(res.data);
       } catch (err) {
-        setError("Failed to load users. Please check your connection and try again.");
+        setError('Failed to load users. Please check your connection and try again.');
       } finally {
         setLoading(false);
       }
@@ -43,10 +45,11 @@ const AdminDashboard = () => {
     fetchUsers();
   }, [darkMode]);
 
+  // Handle user deletion
   const handleDeleteUser = async (userId) => {
     try {
-      await axios.delete(`http://localhost:3001/api/users/${userId}`, {
-        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/users/${userId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setUsers(users.filter(user => user._id !== userId));
       setShowDeleteModal(false);
@@ -60,13 +63,13 @@ const AdminDashboard = () => {
       setTimeout(() => {
         document.body.removeChild(successElement);
       }, 3000);
-
     } catch (err) {
-      setError("Failed to delete user. The server returned an error.");
+      setError('Failed to delete user. The server returned an error.');
       setShowDeleteModal(false);
     }
   };
 
+  // Confirm deletion modal
   const confirmDelete = (userId, e) => {
     e.stopPropagation();
     setUserToDelete(userId);
@@ -74,49 +77,58 @@ const AdminDashboard = () => {
     setShowUserMenu(null);
   };
 
+  // Toggle user menu
   const toggleUserMenu = (userId, e) => {
     e.stopPropagation();
     setShowUserMenu(showUserMenu === userId ? null : userId);
   };
 
+  // Toggle dark mode
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
   };
 
+  // Filter users based on search and role
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch =
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-    if (activeFilter === "all") return matchesSearch;
+    if (activeFilter === 'all') return matchesSearch;
     return matchesSearch && user.role.toLowerCase() === activeFilter.toLowerCase();
   });
 
   // Calculate dashboard stats
   const stats = {
     totalUsers: users.length,
-    admins: users.filter(user => user.role === "Admin").length,
+    admins: users.filter(user => user.role === 'Admin').length,
     newUsers: users.filter(user => {
       const userDate = new Date(user.createdAt || Date.now());
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
       return userDate > oneWeekAgo;
-    }).length
+    }).length,
   };
 
-  if (loading) return (
-    <div className="loading-container">
-      <div className="loading-spinner-container">
-        <BiLoaderAlt className="loading-spinner" />
+  // Loading state
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner-container">
+          <BiLoaderAlt className="loading-spinner" />
+        </div>
+        <p>Loading dashboard data...</p>
+        <div className="loading-progress-bar">
+          <div className="loading-progress-value"></div>
+        </div>
       </div>
-      <p>Loading dashboard data...</p>
-      <div className="loading-progress-bar">
-        <div className="loading-progress-value"></div>
-      </div>
-    </div>
-  );
+    );
+  }
 
+  // Main dashboard render
   return (
     <div className={`admin-dashboard ${darkMode ? 'dark-theme' : ''}`}>
+      {/* Sidebar */}
       <div className="dashboard-sidebar">
         <div className="sidebar-header">
           <div className="logo">
@@ -150,7 +162,9 @@ const AdminDashboard = () => {
         </div>
       </div>
 
+      {/* Main Content */}
       <div className="dashboard-main">
+        {/* Header */}
         <div className="main-header">
           <h1>
             <span className="welcome-text">Welcome back,</span>
@@ -170,6 +184,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
+        {/* Stats Grid */}
         <div className="stats-grid">
           <div className="stats-card users">
             <div className="stats-icon">
@@ -198,7 +213,10 @@ const AdminDashboard = () => {
             </div>
             <div className="stats-progress">
               <div className="progress-bar">
-                <div className="progress-value" style={{ width: `${(stats.admins / stats.totalUsers) * 100}%` }}></div>
+                <div
+                  className="progress-value"
+                  style={{ width: `${(stats.admins / stats.totalUsers) * 100}%` }}
+                ></div>
               </div>
               <span>{Math.round((stats.admins / stats.totalUsers) * 100)}%</span>
             </div>
@@ -219,6 +237,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
+        {/* User Management Section */}
         <div className="dashboard-content">
           <div className="content-header">
             <h2>User Management</h2>
@@ -228,6 +247,7 @@ const AdminDashboard = () => {
             </Link>
           </div>
 
+          {/* Filter and Search */}
           <div className="filter-container">
             <div className="search-container">
               <FaSearch className="search-icon" />
@@ -241,27 +261,27 @@ const AdminDashboard = () => {
             </div>
 
             <div className="filter-tabs">
-              <button
-                className={`filter-tab ${activeFilter === 'all' ? 'active' : ''}`}
-                onClick={() => setActiveFilter('all')}
-              >
-                All Users
-              </button>
-              <button
-                className={`filter-tab ${activeFilter === 'admin' ? 'active' : ''}`}
-                onClick={() => setActiveFilter('admin')}
-              >
-                Admins
-              </button>
-              <button
-                className={`filter-tab ${activeFilter === 'user' ? 'active' : ''}`}
-                onClick={() => setActiveFilter('user')}
-              >
-                Regular Users
-              </button>
+              {[
+                { label: 'All Users', value: 'all' },
+                { label: 'Students', value: 'student' },
+                { label: 'Admins', value: 'admin' },
+                { label: 'Content Admins', value: 'content_admin' },
+                { label: 'Faculty', value: 'faculty' },
+                { label: 'Verification Admins', value: 'verification_admin' },
+                { label: 'Verification Officers', value: 'verification_officer' },
+              ].map(({ label, value }) => (
+                <button
+                  key={value}
+                  className={`filter-tab ${activeFilter === value ? 'active' : ''}`}
+                  onClick={() => setActiveFilter(value)}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
+          {/* Error Message */}
           {error && (
             <div className="error-message">
               <span className="error-icon">!</span>
@@ -269,6 +289,7 @@ const AdminDashboard = () => {
             </div>
           )}
 
+          {/* Users List */}
           <div className="users-container">
             {filteredUsers.length > 0 ? (
               <div className="users-grid">
@@ -278,46 +299,57 @@ const AdminDashboard = () => {
                     className="user-card"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
-                    <div className="user-card-header">
-                      <div className="user-avatar">
-                        <span>{user.name.charAt(0)}</span>
+                    <div className="user-card-content">
+                      <div className="user-card-header">
+                        <div className="user-avatar">
+                          <span>{user.name.charAt(0)}</span>
+                        </div>
                       </div>
-                      <div className="user-card-menu">
-                        <button className="menu-toggle" onClick={(e) => toggleUserMenu(user._id, e)}>
-                          <BsThreeDotsVertical />
+                      <div className="user-info">
+                        <h3 className="user-name">{user.name}</h3>
+                        <p className="user-email">{user.email}</p>
+                        <div className="user-role">
+                          <span className={`role-badge ${user.role.toLowerCase()}`}>
+                            {user.role}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="user-actions">
+                        <Link to={`/user/${user._id}`} className="btn-view">
+                          <FaEye />
+                          <span>View</span>
+                        </Link>
+                        <button
+                          className="btn-delete"
+                          onClick={(e) => confirmDelete(user._id, e)}
+                        >
+                          <FaTrash />
+                          <span>Delete</span>
                         </button>
-                        {showUserMenu === user._id && (
-                          <div className="user-menu">
-                            <Link to={`/user/${user._id}`} className="menu-item">
-                              <FaEye />
-                              <span>View Details</span>
-                            </Link>
-                            <button className="menu-item delete" onClick={(e) => confirmDelete(user._id, e)}>
-                              <FaTrash />
-                              <span>Delete User</span>
-                            </button>
-                          </div>
-                        )}
+                        <div className="user-card-menu">
+                          <button
+                            className="menu-toggle"
+                            onClick={(e) => toggleUserMenu(user._id, e)}
+                          >
+                            <BsThreeDotsVertical />
+                          </button>
+                          {showUserMenu === user._id && (
+                            <div className="user-menu">
+                              <Link to={`/user/${user._id}`} className="menu-item">
+                                <FaEye />
+                                <span>View Details</span>
+                              </Link>
+                              <button
+                                className="menu-item delete"
+                                onClick={(e) => confirmDelete(user._id, e)}
+                              >
+                                <FaTrash />
+                                <span>Delete User</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="user-info">
-                      <h3 className="user-name">{user.name}</h3>
-                      <p className="user-email">{user.email}</p>
-                      <div className="user-role">
-                        <span className={`role-badge ${user.role.toLowerCase()}`}>
-                          {user.role}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="user-actions">
-                      <Link to={`/user/${user._id}`} className="btn-view">
-                        <FaEye />
-                        <span>View</span>
-                      </Link>
-                      <button className="btn-delete" onClick={(e) => confirmDelete(user._id, e)}>
-                        <FaTrash />
-                        <span>Delete</span>
-                      </button>
                     </div>
                   </div>
                 ))}
@@ -332,8 +364,8 @@ const AdminDashboard = () => {
                 <button
                   className="btn-reset-search"
                   onClick={() => {
-                    setSearchTerm("");
-                    setActiveFilter("all");
+                    setSearchTerm('');
+                    setActiveFilter('all');
                   }}
                 >
                   Reset Filters
@@ -344,6 +376,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
+      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="modal-overlay">
           <div className="delete-modal">
@@ -353,8 +386,13 @@ const AdminDashboard = () => {
             <h3>Confirm Deletion</h3>
             <p>Are you sure you want to delete this user? This action cannot be undone.</p>
             <div className="modal-actions">
-              <button className="btn-cancel" onClick={() => setShowDeleteModal(false)}>Cancel</button>
-              <button className="btn-confirm" onClick={() => handleDeleteUser(userToDelete)}>
+              <button className="btn-cancel" onClick={() => setShowDeleteModal(false)}>
+                Cancel
+              </button>
+              <button
+                className="btn-confirm"
+                onClick={() => handleDeleteUser(userToDelete)}
+              >
                 <FaTrash />
                 <span>Delete User</span>
               </button>

@@ -40,8 +40,8 @@ router.get("/:id", auth, async (req, res) => {
   }
 });
 
-// ✅ POST create a new notice (Admin Only)
-router.post("/", auth, authorize(["admin"]), async (req, res) => {
+// ✅ POST create a new notice (Content Admin Only)
+router.post("/", auth, authorize(["content_admin"]), async (req, res) => {
   try {
     const { title, description, expiresAt, targetRoles } = req.body;
 
@@ -54,7 +54,7 @@ router.post("/", auth, authorize(["admin"]), async (req, res) => {
       description,
       postedBy: req.user.userId,
       expiresAt,
-      targetRoles: targetRoles || ["student", "content_admin", "admin"],
+      targetRoles: targetRoles || ["student", "content_admin", "admin","faculty", "verification_admin", "verification_officer"],
     });
 
     await newNotice.save();
@@ -65,8 +65,8 @@ router.post("/", auth, authorize(["admin"]), async (req, res) => {
   }
 });
 
-// ✅ PUT update a notice (Admin Only)
-router.put("/:id", auth, authorize(["admin"]), async (req, res) => {
+// ✅ PUT update a notice (Content Admin Only)
+router.put("/:id", auth, authorize(["content_admin"]), async (req, res) => {
   try {
     const { title, description, expiresAt, targetRoles } = req.body;
 
@@ -87,8 +87,8 @@ router.put("/:id", auth, authorize(["admin"]), async (req, res) => {
   }
 });
 
-// ✅ DELETE a notice (Admin Only)
-router.delete("/:id", auth, authorize(["admin"]), async (req, res) => {
+// ✅ DELETE a notice (Content Admin Only)
+router.delete("/:id", auth, authorize(["content_admin"]), async (req, res) => {
   try {
     const deletedNotice = await Notice.findByIdAndDelete(req.params.id);
 

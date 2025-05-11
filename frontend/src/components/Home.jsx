@@ -10,31 +10,67 @@ const Home = () => {
   const navigate = useNavigate();
 
   const [notices, setNotices] = useState([]);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
+    fetchUserRole();
     fetchNotices();
   }, []);
+
+  const fetchUserRole = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const userId = localStorage.getItem("userId");
+      if (!token || !userId) {
+        navigate("/login");
+        return;
+      }
+
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/users/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUserRole(response.data.role);
+    } catch (error) {
+      console.error("Failed to fetch user role:", error);
+      navigate("/login");
+    }
+  };
 
   const fetchNotices = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:3001/api/notices", {
+      if (!token) {
+        console.log("No token found, redirecting to login");
+        navigate("/login");
+        return;
+      }
+
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/notices`, {
         headers: {
-          Authorization: token,
+          Authorization: `Bearer ${token}`,
         },
       });
       setNotices(response.data);
     } catch (error) {
-      console.error("Failed to fetch notices:", error);
+      if (error.response && error.response.status === 401) {
+        console.error("Session expired or invalid token, redirecting to login");
+        localStorage.removeItem("token");
+        localStorage.removeItem("userId");
+        navigate("/login");
+      } else {
+        console.error("Failed to fetch notices:", error);
+      }
     }
   };
 
   const handleDelete = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:3001/api/notices/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/notices/${id}`, {
         headers: {
-          Authorization: token,
+          Authorization: `Bearer ${token}`,
         },
       });
       setNotices(notices.filter((notice) => notice._id !== id));
@@ -51,6 +87,81 @@ const Home = () => {
     navigate("/newNotice");
   };
 
+  // Define role-specific corner content
+  const getRoleCornerContent = () => {
+    switch (userRole) {
+      case "student":
+        return {
+          title: "Student Corner",
+          items: [
+            { text: "Access your study materials", path: "/study-materials" },
+            { text: "Submit assignments", path: "/assignments" },
+            { text: "Check your timetable", path: "/dashboard?timetable" },
+            { text: "View your grades", path: "/dashboard?grades" },
+          ],
+        };
+      case "faculty":
+        return {
+          title: "Faculty Corner",
+          items: [
+            { text: "Upload study materials", path: "/upload-materials" },
+            { text: "Assign assignment", path: "/assign-assignments" },
+            { text: "Check your timetable", path: "/dashboard?timetable" },
+            { text: "View student grades", path: "/dashboard?grades" },
+          ],
+        };
+      case "admin":
+        return {
+          title: "Admin Corner",
+          items: [
+            { text: "Manage users", path: "/manage-users" },
+            { text: "Manage courses", path: "/manage-courses" },
+            { text: "Check your timetable", path: "/dashboard?timetable" },
+            { text: "View system reports", path: "/system-reports" },
+          ],
+        };
+      case "content_admin":
+        return {
+          title: "Content Admin Corner",
+          items: [
+            { text: "Manage notices", path: "/manage-notices" },
+            { text: "Update course content", path: "/update-content" },
+            { text: "Check your timetable", path: "/dashboard?timetable" },
+            { text: "Review content analytics", path: "/content-analytics" },
+          ],
+        };
+      case "verification_admin":
+        return {
+          title: "Verification Admin Corner",
+          items: [
+            { text: "Manage verification officers", path: "/manage-officers" },
+            { text: "Review verification reports", path: "/verification-reports" },
+            { text: "Check your timetable", path: "/dashboard?timetable" },
+            { text: "Approve student documents", path: "/approve-documents" },
+          ],
+        };
+      case "verification_officer":
+        return {
+          title: "Verification Officer Corner",
+          items: [
+            { text: "Verify student documents", path: "/verify-documents" },
+            { text: "Update verification status", path: "/update-verification" },
+            { text: "Check your timetable", path: "/dashboard?timetable" },
+            { text: "View assigned tasks", path: "/assigned-tasks" },
+          ],
+        };
+      default:
+        return {
+          title: "User Corner",
+          items: [
+            { text: "Check your timetable", path: "/dashboard?timetable" },
+          ],
+        };
+    }
+  };
+
+  const roleCorner = getRoleCornerContent();
+
   return (
     <div className="home-container">
       <header className="hero-section">
@@ -60,9 +171,9 @@ const Home = () => {
       <div className="moving-text-wrapper">
         <div className="moving-text">
           🚨 Important Update: Please check the Notice Board for upcoming events! 🚨
-          &nbsp;&nbsp;&nbsp;🆘 For assistance, contact our Helpline:{" "}
+             🆘 For assistance, contact our Helpline:{" "}
           <strong>1800-123-4567</strong> 🆘
-          &nbsp;&nbsp;&nbsp;🏆 NIT Trichy is ranked <strong>9th</strong> in the
+             🏆 NIT Trichy is ranked <strong>9th</strong> in the
           NIRF Engineering Rankings 2023. 🏆
         </div>
       </div>
@@ -77,12 +188,14 @@ const Home = () => {
                   <img src="images/Noticeboard.jpeg" className="section-icon" />
                   Notice Board
                 </h4>
-                <button
-                  onClick={handleAddNotice}
-                  className="btn btn-sm btn-success"
-                >
-                  + Add
-                </button>
+                {userRole === "content_admin" ? (
+                  <button
+                    onClick={handleAddNotice}
+                    className="btn btn-sm btn-success"
+                  >
+                    + Add
+                  </button>
+                ) : null}
               </div>
 
               <ul className="notice-list">
@@ -99,20 +212,22 @@ const Home = () => {
                         style={{ width: "20px", marginLeft: "5px" }}
                       />
                     </Link>
-                    <div className="btn-group btn-group-sm">
-                      <button
-                        className="btn btn-primary"
-                        onClick={() => handleEdit(notice)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-danger"
-                        onClick={() => handleDelete(notice._id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    {userRole === "content_admin" ? (
+                      <div className="btn-group btn-group-sm">
+                        <button
+                          className="btn btn-primary"
+                          onClick={() => handleEdit(notice)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="btn btn-danger"
+                          onClick={() => handleDelete(notice._id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -148,9 +263,9 @@ const Home = () => {
             </section>
           </div>
 
-          {/* ======================== STUDENT CORNER ======================== */}
+          {/* ======================== ROLE CORNER ======================== */}
           <div className="col-md-3">
-            <section className="student-corner">
+            <section className="role-corner">
               <div>
                 <div className="mainhead">
                   <h4 className="section-title">
@@ -158,22 +273,15 @@ const Home = () => {
                       src="images/Studentcorner.jpeg"
                       className="section-icon"
                     />
-                    Student Corner
+                    {roleCorner.title}
                   </h4>
                 </div>
-                <ul className="student-list">
-                  <Link to="/study-materials" className="student-item">
-                    Access your study materials
-                  </Link>
-                  <Link to="/assignments" className="student-item">
-                    Submit assignments
-                  </Link>
-                  <Link to="/timetable" className="student-item">
-                    Check your timetable
-                  </Link>
-                  <Link to="/grades" className="student-item">
-                    View your grades
-                  </Link>
+                <ul className="role-list">
+                  {roleCorner.items.map((item, index) => (
+                    <Link key={index} to={item.path} className="role-item">
+                      {item.text}
+                    </Link>
+                  ))}
                 </ul>
               </div>
             </section>

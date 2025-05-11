@@ -13,7 +13,7 @@ const AdminDetails = () => {
   useEffect(() => {
     const fetchAdminDetails = async () => {
       try {
-        const res = await axios.get(`http://localhost:3001/api/users/${id}`, {
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/users/${id}`, {
           headers: {
             "Authorization": `Bearer ${localStorage.getItem("token")}`,
           },

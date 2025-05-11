@@ -1,0 +1,182 @@
+/* Container styling */
+.update-student-container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 40px;
+  background: linear-gradient(135deg, #fdfdfd, #f3f6fb);
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  animation: fadeIn 0.6s ease;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.header h2 {
+  font-size: 1.9rem;
+  font-weight: bold;
+  color: #2e3a59;
+}
+
+.edit-icon {
+  font-size: 28px;
+  color: #4b70e2;
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.edit-icon:hover {
+  transform: rotate(10deg) scale(1.15);
+}
+
+/* Back Button */
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #eceff5;
+  color: #333;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.back-button:hover {
+  background: #dce3f2;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Form styling */
+.update-student-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Input group */
+.input-group {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  transform: translateY(-50%);
+  color: #5b6d92;
+  font-size: 1.1rem;
+}
+
+.input-field {
+  width: 100%;
+  padding: 12px 16px 12px 45px;
+  border-radius: 10px;
+  border: 1.5px solid #d9e2f2;
+  background: #f9fbfd;
+  font-size: 1rem;
+  color: #2e3a59;
+  transition: all 0.3s;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #4b70e2;
+  box-shadow: 0 0 8px rgba(75, 112, 226, 0.2);
+}
+
+/* Submit button */
+.submit-btn {
+  background: linear-gradient(to right, #4b70e2, #6fa9f3);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 1.05rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.4s ease, transform 0.2s ease;
+}
+
+.submit-btn:hover {
+  background: linear-gradient(to right, #3a5cc1, #5d94db);
+  transform: translateY(-2px);
+}
+
+.submit-btn:disabled {
+  background: #c5c5c5;
+  cursor: not-allowed;
+}
+
+/* Message styles */
+.message-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.success-message,
+.error-message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  animation: fadeOut 3s forwards;
+}
+
+.success-message {
+  background: #dbf4e2;
+  color: #107c41;
+  border-left: 6px solid #28a745;
+}
+
+.error-message {
+  background: #fbe5e5;
+  color: #c0392b;
+  border-left: 6px solid #e74c3c;
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .update-student-container {
+    padding: 25px 20px;
+  }
+
+  .header h2 {
+    font-size: 1.5rem;
+  }
+
+  .submit-btn {
+    font-size: 1rem;
+  }
+
+  .input-field {
+    padding-left: 40px;
+  }
+}

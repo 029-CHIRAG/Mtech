@@ -8,14 +8,14 @@ const NewNotice = () => {
   const { id } = useParams();
 
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState(""); // NEW STATE for description
+  const [description, setDescription] = useState("");
   const [link, setLink] = useState("");
 
   useEffect(() => {
     if (location.state && location.state.notice) {
       const { notice } = location.state;
       setTitle(notice.title);
-      setDescription(notice.description || ""); // Populate description if editing
+      setDescription(notice.description || "");
       setLink(notice.link || "");
     }
   }, [location]);
@@ -24,6 +24,12 @@ const NewNotice = () => {
     e.preventDefault();
 
     const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Session expired. Please log in again.");
+      navigate("/login");
+      return;
+    }
 
     if (!title.trim() || !description.trim()) {
       alert("Title and Description are required!");
@@ -34,11 +40,11 @@ const NewNotice = () => {
       if (id) {
         // Update existing notice
         const res = await axios.put(
-          `http://localhost:3001/api/notices/${id}`,
+          `${import.meta.env.VITE_BACKEND_URL}/api/notices/${id}`,
           { title, description, link },
           {
             headers: {
-              Authorization: token,
+              Authorization: `Bearer ${token}`, // Fixed to use Bearer
             },
           }
         );
@@ -46,11 +52,11 @@ const NewNotice = () => {
       } else {
         // Create new notice
         const res = await axios.post(
-          "http://localhost:3001/api/notices",
+          `${import.meta.env.VITE_BACKEND_URL}/api/notices`,
           { title, description, link },
           {
             headers: {
-              Authorization: token,
+              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -59,7 +65,15 @@ const NewNotice = () => {
 
       navigate("/");
     } catch (error) {
-      console.error("Failed to submit notice:", error);
+      if (error.response && error.response.status === 401) {
+        alert("Unauthorized: Please log in as a content admin.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("userId");
+        navigate("/login");
+      } else {
+        console.error("Failed to submit notice:", error);
+        alert("Failed to submit notice. Please try again.");
+      }
     }
   };
 

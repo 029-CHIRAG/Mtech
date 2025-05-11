@@ -45,7 +45,7 @@ const ContentAdmin = () => {
     setSelectedCourse(course); // Store selected course (includes courseId)
 
     // Fetch existing form structure for this course
-    axios.get(`http://localhost:3001/api/get-form-structure/${course._id}`)
+    axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/get-form-structure/${course._id}`)
       .then(res => {
         setFields(res.data.fields || []);
         setEducationFields(res.data.educationFields || {
@@ -80,7 +80,7 @@ const ContentAdmin = () => {
       return;
     }
 
-    axios.post("http://localhost:3001/api/save-form-structure", {
+    axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/save-form-structure`, {
       courseId: selectedCourse._id,
       fields,
       educationFields,
@@ -95,7 +95,7 @@ const ContentAdmin = () => {
     const newDescription = prompt("Enter new course description:");
     if (!newDescription) return;
 
-    axios.put(`http://localhost:3001/api/update-course/${selectedCourse._id}`, { description: newDescription })
+    axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/update-course/${selectedCourse._id}`, { description: newDescription })
       .then(() => {
         alert("Description updated successfully");
         setCourses(courses.map(course =>
@@ -153,6 +153,9 @@ const ContentAdmin = () => {
           <p>{selectedCourse.description}</p>
 
           <button onClick={updateDescription}>Update Description</button>
+          <button onClick={() => navigate(`/content-admin/add-description/${selectedCourse._id}`)}>
+            Add Description
+          </button>
           <button onClick={addField}>Add Field</button>
 
           {/* Configure Education Section */}
@@ -274,5 +277,3 @@ const ContentAdmin = () => {
 };
 
 export default ContentAdmin;
-
-

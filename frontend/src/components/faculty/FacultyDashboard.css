@@ -1,0 +1,67 @@
+.faculty-dashboard-container {
+    min-height: 100vh;
+    background: linear-gradient(to right, #dbeafe, #f0fdf4);
+    padding: 60px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .faculty-dashboard-card {
+    background: white;
+    padding: 30px 40px;
+    border-radius: 20px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .faculty-dashboard-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e40af;
+    margin-bottom: 25px;
+    text-align: center;
+  }
+  
+  .faculty-info p {
+    font-size: 16px;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background-color: #f9fafb;
+    border-radius: 10px;
+    border-left: 4px solid #6366f1;
+  }
+  
+  .faculty-info p strong {
+    color: #2563eb;
+  }
+  
+  .loading-text {
+    font-size: 18px;
+    color: #6b7280;
+    text-align: center;
+    animation: pulse 1.5s infinite;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+  }

@@ -16,7 +16,7 @@ const Register = () => {
 
     try {
       setLoading(true);
-      const res = await axios.post("http://localhost:3001/register", {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/register`, {
         name,
         email,
         password,

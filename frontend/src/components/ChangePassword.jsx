@@ -51,7 +51,7 @@ const ChangePassword = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.put(
-        "http://localhost:3001/change-password", // Replace with your actual backend endpoint
+        `${import.meta.env.VITE_BACKEND_URL}/change-password`, // Replace with your actual backend endpoint
         {
           currentPassword,
           newPassword,

@@ -7,22 +7,40 @@ const nodemailer = require("nodemailer");
 require("dotenv").config();
 const UserModel = require("./models/User");
 const CourseModel = require("./models/Course");
-const {body , validationResult} = require("express-validator");
-const ApplicationForm = require("./models/ApplicationForm");
-const FormModel = require("./models/Form"); 
+const courseRoutes = require("./routes/courseRoutes");
 const formRoutes = require("./routes/formRoutes");
 const noticeRoutes = require("./routes/noticeRoutes");
+const facultyRoutes = require("./routes/faculty");
+const studentRoutes = require("./routes/student");
+const verificationOfficerRoutes = require("./routes/VerificationOfficerRoutes");
+const verificationAdminRoutes = require("./routes/VerificationAdminRoutes");
+const studentNotificationRoutes = require("./routes/StudentNotificationRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
+const ApplicationForm = require("./models/ApplicationForm");
+const FormModel = require("./models/Form");
+const { auth, authorize } = require("./middleware/auth");
+const listEndpoints = require("express-list-endpoints");
+const path = require('path');
 const app = express();
-app.use(express.json({limit: " 10mb"}));
-app.use(express.urlencoded({limit : "10mb" , extended: true}));
+
+app.use(express.json({ limit: "50mb" }));
 app.use(
   cors({
-    origin: "http://localhost:5173",  // Allow frontend access
-    methods: "GET,POST,PUT,DELETE,OPTIONS",
-    credentials: true
+    origin: "http://localhost:5173",
+    methods: "GET,POST,PUT,DELETE,PATCH,OPTIONS",
+    credentials: true,
   })
 );
 app.options("*", cors());
+
+app.use((req, res, next) => {
+  console.log(`Request: ${req.method} ${req.url}`);
+  res.on("finish", () => {
+    console.log(`Response Headers for ${req.url}:`, res.getHeaders());
+  });
+  next();
+});
+
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -31,61 +49,44 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-
 const MONGO_URI = process.env.MONGO_URI;
 mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
-app.use("/api/forms", formRoutes);  // Register form routes
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key";
 
-
+// Mount routes
+app.use("/api/courses", courseRoutes);
+app.use("/api/forms", formRoutes);
 app.use("/api/notices", noticeRoutes);
-// Middleware for admin authorization
-const authorizeAdmin = (req, res, next) => {
-  console.log("User role:", req.user.role);  // Log the user role for debugging
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ message: "Access denied. Admins only." });
+app.use("/api/faculty", facultyRoutes);
+app.use("/api/student", studentRoutes);
+app.use("/api/applications", require("./routes/applicationRoutes"));
+app.use("/api/verification-admin", verificationAdminRoutes);
+app.use("/api/verification-officer", verificationOfficerRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/student-notifications", studentNotificationRoutes);
+
+// Serve static files from the uploads directory
+app.use('/api/uploads', express.static(path.join(__dirname, 'Uploads')));
+
+// Log registered routes
+console.log("Registered Routes:");
+console.log(listEndpoints(app));
+
+const authorizeAdminOrVerificationAdmin = (req, res, next) => {
+  console.log("User role:", req.user.role);
+  if (!["admin", "verification_admin"].includes(req.user.role)) {
+    return res.status(403).json({ message: "Access denied. Admins or Verification Admins only." });
   }
   next();
 };
-const authorizeContentAdmin = (req, res, next) => {
-  if (req.user.role !== "content_admin") {
-    return res.status(403).json({ message: "Access denied. Content Admins only." });
-  }
-  next();
-};
-// Middleware to Protect Routes
-const authenticate = (req, res, next) => {
-  const token = req.header("Authorization");
-
-  if (!token) {
-    console.error("No token provided");
-    return res.status(401).json({ message: "Access denied. No token provided." });
-  }
-
-  try {
-    const decoded = jwt.verify(token.replace("Bearer ", ""), JWT_SECRET);
-    
-    if (!decoded || !decoded.role) {
-      return res.status(401).json({ message: "Invalid token structure" });
-    }
-
-    req.user = decoded;
-    console.log("Authenticated user:", req.user); // Debugging log
-    next();
-  } catch (error) {
-    console.error("Invalid token:", error);
-    res.status(401).json({ message: "Invalid token" });
-  }
-};
-
 
 app.post("/register", async (req, res) => {
-  const { name, email, password } = req.body; // No role input
-  const userRole = "student"; // Assign "student" role by default
+  const { name, email, password } = req.body;
+  const userRole = "student";
 
   try {
     const user = await UserModel.findOne({ email });
@@ -98,7 +99,7 @@ app.post("/register", async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: userRole, // Always "student"
+      role: userRole,
     });
 
     const token = jwt.sign(
@@ -107,7 +108,6 @@ app.post("/register", async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    // Send email notification
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
@@ -143,9 +143,97 @@ app.post("/register", async (req, res) => {
   }
 });
 
+app.post("/api/users/create", auth, authorizeAdminOrVerificationAdmin, async (req, res) => {
+  const { name, email, password, role, courseId } = req.body;
+  const allowedRolesForAdmin = ["admin", "content_admin", "verification_admin", "student", "faculty"];
+  const allowedRolesForVerificationAdmin = ["verification_officer"];
 
+  // Log incoming request body for debugging
+  console.log("Received /api/users/create request:", { name, email, password, role, courseId });
 
-// User Login with Authentication
+  try {
+    // Validate required fields
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ message: "Name, email, password, and role are required." });
+    }
+
+    // Determine allowed roles based on the requester's role
+    const requesterRole = req.user.role;
+    const allowedRoles = requesterRole === "admin" ? allowedRolesForAdmin : allowedRolesForVerificationAdmin;
+
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ message: `Invalid role. Allowed roles: ${allowedRoles.join(", ")}` });
+    }
+
+    // Check for existing user
+    const user = await UserModel.findOne({ email });
+    if (user) {
+      return res.status(400).json({ message: "User already registered." });
+    }
+
+    // Require courseId for verification_admin creating verification_officer
+    let validatedCourseId = null;
+    if (requesterRole === "verification_admin" && role === "verification_officer") {
+      if (!courseId) {
+        return res.status(400).json({ message: "Course ID is required for creating a verification officer." });
+      }
+      if (!mongoose.Types.ObjectId.isValid(courseId)) {
+        return res.status(400).json({ message: "Invalid course ID format." });
+      }
+      const course = await CourseModel.findById(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found." });
+      }
+      validatedCourseId = courseId;
+    } else if (courseId) {
+      // Optional courseId validation for admin
+      if (!mongoose.Types.ObjectId.isValid(courseId)) {
+        return res.status(400).json({ message: "Invalid course ID format." });
+      }
+      const course = await CourseModel.findById(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found." });
+      }
+      validatedCourseId = courseId;
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await UserModel.create({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      courses: validatedCourseId ? [validatedCourseId] : [],
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Welcome to Our Platform!",
+      html: `
+        <h2>Hi ${name},</h2>
+        <p>You have been registered as a ${role}${validatedCourseId ? ` for course ID ${validatedCourseId}` : ""} on our platform! 🎉</p>
+        <p>Please log in using your email and the provided password.</p>
+        <p><strong>Best Regards,</strong></p>
+        <p><strong>Your Team</strong></p>
+      `,
+    };
+
+    transporter.sendMail(mailOptions, (err, info) => {
+      if (err) {
+        console.error("Error sending email:", err);
+      } else {
+        console.log("Email sent:", info.response);
+      }
+    });
+
+    res.status(201).json({ message: `User created successfully as ${role}` });
+  } catch (error) {
+    console.error("Error creating user:", error);
+    res.status(500).json({ message: "Failed to create user", error: error.message });
+  }
+});
+
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -164,126 +252,32 @@ app.post("/login", async (req, res) => {
       JWT_SECRET,
       { expiresIn: "1h" }
     );
-    console.log("Generated JWT Token:", token); // ✅ Log the token
-    return res.status(200).json({ token, userId: user._id, role: user.role,jwt_token:token });
+    console.log("Generated JWT Token:", token);
+    return res.status(200).json({ token, userId: user._id, role: user.role, jwt_token: token });
   } catch (error) {
-    console.error("Login error:", error); // Log error for debugging
-   return res.status(500).json({ message: "Login error", error });
+    console.error("Login error:", error);
+    return res.status(500).json({ message: "Login error", error });
   }
 });
 
-// Route: Admin Adds a Course
-
-const generateRandomPassword = () => {
-  return Math.random().toString(36).slice(-8); // Generates an 8-character password
-};
-
-app.post("/api/newCourse", authenticate, authorizeAdmin, async (req, res) => {
-  const { title, description, contentAdminName,contentAdminEmail} = req.body;
-
-  if (!title || !description|| !contentAdminName|| !contentAdminEmail  ) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-  
+app.get("/api/users", auth, authorize(["admin"]), async (req, res) => {
   try {
-
-    let contentAdmin = await UserModel.findOne({ email:contentAdminEmail });
-    
-    const generatedPassword = generateRandomPassword();
-    const hashedPassword = await bcrypt.hash(generatedPassword, 10);
-    
-    if (!contentAdmin) {
-      
-      contentAdmin = new UserModel({
-        name:contentAdminName,
-        email:contentAdminEmail,
-        password: hashedPassword,
-        role: "content_admin",
-      });
-      await contentAdmin.save();
-    }
-
-    const newCourse = new CourseModel({
-      title,
-      description,
-      contentAdmins:[contentAdmin._id], // Assign content admins when creating the course
-    });
-
-    await newCourse.save();
-    
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: contentAdminEmail,
-      subject: "Your Content Admin Credentials",
-      text: `Hello ,${contentAdminName}\n\nYou have been assigned as the content admin for the course: "${title}".\n\nYour login credentials:\nEmail: ${contentAdminEmail}\nPassword: ${generatedPassword}\n\nPlease change your password after logging in.\n\nBest Regards,\nAdmin Team`,
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error("Error sending email:", error);
-        return res.status(500).json({ message: "Error sending email", error });
-      }
-      console.log("Email sent:", info.response);
-    });
-
-    res.status(201).json({
-      message: "Course added successfully",
-      newCourse
-    });
+    const users = await UserModel.find();
+    res.json(users);
   } catch (error) {
-    res.status(500).json({ message: "Error adding course", error: error.message });
-  }
-});
-
-app.put("/api/courses/:courseId", authenticate, authorizeContentAdmin, async (req, res) => {
-  const { courseId } = req.params;
-  const updateData = req.body;
-
-  try {
-    const course = await CourseModel.findByIdAndUpdate(courseId, updateData, { new: true });
-    if (!course) {
-      return res.status(404).json({ message: "Course not found" });
-    }
-
-    res.status(200).json({ message: "Course updated successfully", course });
-  } catch (error) {
-    res.status(500).json({ message: "Error updating course", error: error.message });
-  }
-});
-
-
-
-// Route: Fetch All Users (admin only)
-app.get("/api/users", authenticate, authorizeAdmin, async (req, res) => {
-  try {
-    const users = await UserModel.find(); // Fetch all users from FormDataModel
-    res.json(users); // Return the users
-  } catch (error) {
-    console.error("Error fetching users:", error); // Log error for debugging
+    console.error("Error fetching users:", error);
     res.status(500).json({ message: "Error fetching users", error });
   }
 });
 
-// Route: Fetch All Courses
-app.get("/api/courses", async (req, res) => {
-  try {
-    const courses = await CourseModel.find();
-    res.json(courses);
-  } catch (error) {
-    console.error("Error fetching courses:", error); // Log error for debugging
-    res.status(500).json({ message: "Error fetching courses", error });
-  }
-});
-
-// Route: Fetch a specific user by ID (admin only)
-app.get("/api/users/:id", authenticate, async (req, res) => {
+app.get("/api/users/:id", auth, async (req, res) => {
   const { id } = req.params;
 
   console.log(`Fetching user ${id} - Requested by ${req.user.userId} (Role: ${req.user.role})`);
 
   try {
     if (req.user.role === "admin" || req.user.userId === id) {
-      const user = await FormDataModel.findById(id);
+      const user = await UserModel.findById(id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -297,11 +291,7 @@ app.get("/api/users/:id", authenticate, async (req, res) => {
   }
 });
 
-
-
-
-// Route to delete a user (admin only)
-app.delete("/api/users/:id", authenticate, authorizeAdmin, async (req, res) => {
+app.delete("/api/users/:id", auth, authorize(["admin"]), async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -316,20 +306,7 @@ app.delete("/api/users/:id", authenticate, authorizeAdmin, async (req, res) => {
   }
 });
 
-// Route: Submit Application Form
-app.post("/api/application", authenticate, async (req, res) => {
-  try {
-    const newApplication = new ApplicationForm(req.body);
-    await newApplication.save();
-    res.status(201).json({ message: "Application submitted successfully!", application: newApplication });
-  } catch (error) {
-    console.error("Error submitting application:", error);
-    res.status(500).json({ message: "Error submitting application", error: error.message });
-  }
-});
-
-// Route: Fetch All Applications (Admin Only)
-app.get("/api/applications", authenticate, authorizeAdmin, async (req, res) => {
+app.get("/api/applications", auth, authorize(["admin"]), async (req, res) => {
   try {
     const applications = await ApplicationForm.find();
     res.json(applications);
@@ -339,9 +316,7 @@ app.get("/api/applications", authenticate, authorizeAdmin, async (req, res) => {
   }
 });
 
-
-// Route: Fetch a Specific Application by ID
-app.get("/api/application/:id", authenticate, async (req, res) => {
+app.get("/api/application/:id", auth, async (req, res) => {
   const { id } = req.params;
   try {
     const application = await ApplicationForm.findById(id);
@@ -355,65 +330,7 @@ app.get("/api/application/:id", authenticate, async (req, res) => {
   }
 });
 
-
-app.post("/api/courses/:courseId/add-description", authenticate, authorizeContentAdmin, async (req, res) => {
-  const { courseId } = req.params;
-  const {
-    programDescription,
-    image1,
-    image2,
-    vision,
-    mission,
-    yearsOfDepartment,
-    syllabus,
-    programEducationalObjectives,
-    programOutcomes,
-  } = req.body;
-  console.log("Received data:", req.body); // Log the received data
-  // Validate required fields
-  if (
-    !programDescription ||
-    !image1 ||
-    !image2 ||
-    !vision ||
-    !mission ||
-    !yearsOfDepartment ||
-    !syllabus ||
-    !programEducationalObjectives ||
-    !programOutcomes
-  ) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-
-  try {
-    // Find the course by ID
-    const course = await CourseModel.findById(courseId);
-    if (!course) {
-      return res.status(404).json({ message: "Course not found" });
-    }
-
-    // Update the course with the new description
-    course.programDescription = programDescription;
-    course.image1 = image1;
-    course.image2 = image2;
-    course.vision = vision;
-    course.mission = mission;
-    course.yearsOfDepartment = yearsOfDepartment;
-    course.syllabus = syllabus;
-    course.programEducationalObjectives = programEducationalObjectives;
-    course.programOutcomes = programOutcomes;
-    console.log("Updated course:", course);  //Log the updated course
-    await course.save();
-
-    res.status(200).json({ message: "Course description added successfully!", course });
-  } catch (error) {
-    console.error("Error adding course description:", error);
-    res.status(500).json({ message: "Error adding course description", error: error.message });
-  }
-});
-
-// Route: Delete Application (Admin Only)
-app.delete("/api/application/:id", authenticate, authorizeAdmin, async (req, res) => {
+app.delete("/api/application/:id", auth, authorize(["admin"]), async (req, res) => {
   const { id } = req.params;
   try {
     const application = await ApplicationForm.findByIdAndDelete(id);
@@ -427,7 +344,7 @@ app.delete("/api/application/:id", authenticate, authorizeAdmin, async (req, res
   }
 });
 
-app.post("/api/forms/create", authenticate, async (req, res) => {
+app.post("/api/forms/create", auth, async (req, res) => {
   if (req.user.role !== "content_admin") {
     return res.status(403).json({ message: "Access denied. Content admins only." });
   }
@@ -453,13 +370,10 @@ app.post("/api/forms/create", authenticate, async (req, res) => {
   }
 });
 
-
-// Change Password Route
-app.put("/change-password",authenticate, async (req, res) => {
+app.put("/change-password", auth, async (req, res) => {
   try {
     const { currentPassword, newPassword, confirmNewPassword } = req.body;
 
-    // Validate input fields
     if (!currentPassword || !newPassword || !confirmNewPassword) {
       return res.status(400).json({ message: "All fields are required." });
     }
@@ -468,41 +382,32 @@ app.put("/change-password",authenticate, async (req, res) => {
       return res.status(400).json({ message: "New passwords do not match." });
     }
 
-    const userId = req.user.userId; // Retrieved from JWT by authenticate middleware
+    const userId = req.user.userId;
 
-    // Find user by ID
     const user = await UserModel.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
 
-    // Compare current password
     const isMatch = await bcrypt.compare(currentPassword, user.password);
 
     if (!isMatch) {
       return res.status(400).json({ message: "Current password is incorrect." });
     }
 
-    // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Update password in DB
     user.password = hashedPassword;
     await user.save();
 
     res.json({ message: "Password changed successfully!" });
-
   } catch (error) {
     console.error("Error changing password:", error);
     res.status(500).json({ message: "Something went wrong. Try again later." });
   }
 });
 
-
-
-
-// Start Server
 app.listen(3001, () => {
   console.log("Server listening on http://127.0.0.1:3001");
 });

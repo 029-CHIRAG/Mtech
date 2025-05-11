@@ -76,8 +76,8 @@
   }
 }
 
-/* ===== NOTICE BOARD & STUDENT CORNER ===== */
-.notice-board, .student-corner {
+/* ===== NOTICE BOARD & ROLE CORNER ===== */
+.notice-board, .role-corner {
   border: 1px solid #c8c5c5;
   border-radius: 5px;
   background-color: #ffffff;
@@ -86,7 +86,7 @@
   flex: 1; /* Helps these sections grow if needed */
 }
 
-/* Headers (Notice & Student Corner) */
+/* Headers (Notice & Role Corner) */
 .mainhead {
   background-color: lightblue;
   padding: 15px 20px;
@@ -114,8 +114,8 @@
   margin-right: 10px;
 }
 
-/* Notice & Student Lists */
-.notice-list, .student-list {
+/* Notice & Role Lists */
+.notice-list, .role-list {
   background: #fff;
   border-bottom-right-radius: 5px;
   border-bottom-left-radius: 5px;
@@ -124,7 +124,7 @@
   overflow-y: auto;
 }
 
-.notice-item, .student-item {
+.notice-item, .role-item {
   text-decoration: none;
   color: #333;
   font-size: 14px;
@@ -136,11 +136,11 @@
 }
 
 .notice-item:last-child,
-.student-item:last-child {
+.role-item:last-child {
   border-bottom: none;
 }
 
-.notice-item a, .student-item a {
+.notice-item a, .role-item a {
   flex-grow: 1;
   color: #000;
   font-weight: 500;
@@ -148,14 +148,14 @@
 }
 
 .notice-item a:hover,
-.student-item a:hover {
+.role-item a:hover {
   color: #007bff;
   text-decoration: underline;
 }
 
-/* Notice and Student GIFs */
+/* Notice and Role GIFs */
 .notice-list img,
-.student-list img {
+.role-list img {
   width: 20px;
   height: 20px;
   margin-left: 5px;
@@ -230,7 +230,7 @@
     font-size: 1rem;
   }
 
-  .notice-board, .student-corner {
+  .notice-board, .role-corner {
     margin-bottom: 1rem;
   }
 
