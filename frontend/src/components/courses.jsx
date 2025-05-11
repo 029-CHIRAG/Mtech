@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
@@ -7,7 +6,7 @@ import "./courses.css";
 const Courses = () => {
   const [courses, setCourses] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
   const navigate = useNavigate();
 
   const [editCourse, setEditCourse] = useState(null);
@@ -24,6 +23,8 @@ const Courses = () => {
   });
 
   useEffect(() => {
+    if (loading) return;
+
     if (!currentUser) {
       navigate("/login");
       return;
@@ -40,7 +41,7 @@ const Courses = () => {
         return res.json();
       })
       .then((data) => {
-        console.log("Fetched courses:", data); // Log to verify deadline field
+        console.log("Fetched courses:", data);
         setCourses(data);
       })
       .catch((err) => {
@@ -49,7 +50,7 @@ const Courses = () => {
       });
 
     window.scrollTo(0, 0);
-  }, [currentUser, navigate]);
+  }, [currentUser, loading, navigate]);
 
   const handleEdit = (course) => {
     setEditCourse(course);
@@ -71,63 +72,60 @@ const Courses = () => {
   };
 
   const handleEditSubmit = (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const missingFields = [];
-  if (!editFormData.title.trim()) missingFields.push("title");
-  if (!editFormData.description.trim()) missingFields.push("description");
-  if (!editFormData.duration || isNaN(editFormData.duration) || editFormData.duration <= 0)
-    missingFields.push("duration");
-  if (!editFormData.fee || isNaN(editFormData.fee) || editFormData.fee <= 0)
-    missingFields.push("fee");
-  if (!editFormData.requirement.trim()) missingFields.push("requirement");
-  if (!editFormData.contact.trim()) missingFields.push("contact");
-  if (!editFormData.subjectCode.trim()) missingFields.push("subjectCode");
-  if (!editFormData.assignedTo.trim()) missingFields.push("assignedTo");
+    const missingFields = [];
+    if (!editFormData.title.trim()) missingFields.push("title");
+    if (!editFormData.description.trim()) missingFields.push("description");
+    if (!editFormData.duration || isNaN(editFormData.duration) || editFormData.duration <= 0)
+      missingFields.push("duration");
+    if (!editFormData.fee || isNaN(editFormData.fee) || editFormData.fee <= 0)
+      missingFields.push("fee");
+    if (!editFormData.requirement.trim()) missingFields.push("requirement");
+    if (!editFormData.contact.trim()) missingFields.push("contact");
+    if (!editFormData.subjectCode.trim()) missingFields.push("subjectCode");
+    if (!editFormData.assignedTo.trim()) missingFields.push("assignedTo");
 
-  if (missingFields.length > 0) {
-    alert(`Please fill in all fields: ${missingFields.join(", ")}`);
-    return;
-  }
+    if (missingFields.length > 0) {
+      alert(`Please fill in all fields: ${missingFields.join(", ")}`);
+      return;
+    }
 
-  console.log("Submitting edit form data:", editFormData); // Add logging
-
-  fetch(`${import.meta.env.VITE_BACKEND_URL}/api/courses/${editCourse._id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-    body: JSON.stringify({
-      title: editFormData.title.trim(),
-      description: editFormData.description.trim(),
-      duration: Number(editFormData.duration),
-      fee: Number(editFormData.fee),
-      requirement: editFormData.requirement.trim(),
-      contact: editFormData.contact.trim(),
-      subjectCode: editFormData.subjectCode.trim(),
-      assignedTo: editFormData.assignedTo.trim(),
-      deadline: editFormData.deadline || null,
-    }),
-  })
-    .then((res) => {
-      if (res.status === 403) throw new Error("Access denied. Admins only.");
-      if (!res.ok) throw new Error("Failed to update course.");
-      return res.json();
+    fetch(`${import.meta.env.VITE_BACKEND_URL}/api/courses/${editCourse._id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({
+        title: editFormData.title.trim(),
+        description: editFormData.description.trim(),
+        duration: Number(editFormData.duration),
+        fee: Number(editFormData.fee),
+        requirement: editFormData.requirement.trim(),
+        contact: editFormData.contact.trim(),
+        subjectCode: editFormData.subjectCode.trim(),
+        assignedTo: editFormData.assignedTo.trim(),
+        deadline: editFormData.deadline || null,
+      }),
     })
-    .then((response) => {
-      console.log("Update response:", response); // Add logging
-      setCourses(
-        courses.map((c) => (c._id === editCourse._id ? response.course : c))
-      );
-      setEditCourse(null);
-      alert("Course updated successfully!");
-    })
-    .catch((err) => {
-      console.error("Error updating course:", err);
-      alert(err.message);
-    });
-};
+      .then((res) => {
+        if (res.status === 403) throw new Error("Access denied. Admins only.");
+        if (!res.ok) throw new Error("Failed to update course.");
+        return res.json();
+      })
+      .then((response) => {
+        setCourses(
+          courses.map((c) => (c._id === editCourse._id ? response.course : c))
+        );
+        setEditCourse(null);
+        alert("Course updated successfully!");
+      })
+      .catch((err) => {
+        console.error("Error updating course:", err);
+        alert(err.message);
+      });
+  };
 
   const handleDelete = (courseId) => {
     if (!window.confirm("Are you sure you want to delete this course?")) return;
@@ -192,6 +190,8 @@ const Courses = () => {
     }
   };
 
+  if (loading) return <div className="courses-page-container"><p>Loading courses...</p></div>;
+
   return (
     <div className="courses-page-container">
       <h1 className="courses-page-title">Explore Our Courses</h1>
@@ -221,24 +221,12 @@ const Courses = () => {
               ) : (
                 <>
                   <p className="courses-page-description">{course.description}</p>
-                  <p className="courses-page-detail">
-                    <strong>Duration:</strong> {course.duration} years
-                  </p>
-                  <p className="courses-page-detail">
-                    <strong>Fee:</strong> ₹{course.fee}
-                  </p>
-                  <p className="courses-page-detail">
-                    <strong>Contact Details:</strong> {course.contact}
-                  </p>
-                  <p className="courses-page-detail">
-                    <strong>Requirements:</strong> {course.requirement}
-                  </p>
-                  <p className="courses-page-detail">
-                    <strong>Assigned To:</strong> {course.assignedTo}
-                  </p>
-                  <p className="courses-page-detail">
-                    <strong>Application Deadline:</strong> {formatDeadline(course.deadline)}
-                  </p>
+                  <p className="courses-page-detail"><strong>Duration:</strong> {course.duration} years</p>
+                  <p className="courses-page-detail"><strong>Fee:</strong> ₹{course.fee}</p>
+                  <p className="courses-page-detail"><strong>Contact Details:</strong> {course.contact}</p>
+                  <p className="courses-page-detail"><strong>Requirements:</strong> {course.requirement}</p>
+                  <p className="courses-page-detail"><strong>Assigned To:</strong> {course.assignedTo}</p>
+                  <p className="courses-page-detail"><strong>Application Deadline:</strong> {formatDeadline(course.deadline)}</p>
                   {course.isPaused && (
                     <p className="courses-page-description" style={{ color: "#f39c12", fontWeight: "bold" }}>
                       Deadline crossed can't fill form
@@ -269,16 +257,10 @@ const Courses = () => {
 
               {currentUser?.role === "admin" && (
                 <div className="courses-page-admin-btns">
-                  <button
-                    className="courses-page-admin-btn"
-                    onClick={() => handleEdit(course)}
-                  >
+                  <button className="courses-page-admin-btn" onClick={() => handleEdit(course)}>
                     Edit
                   </button>
-                  <button
-                    className="courses-page-admin-btn"
-                    onClick={() => handleDelete(course._id)}
-                  >
+                  <button className="courses-page-admin-btn" onClick={() => handleDelete(course._id)}>
                     Delete
                   </button>
                 </div>
@@ -298,87 +280,18 @@ const Courses = () => {
           <div className="courses-page-edit-content">
             <h2>Edit Course</h2>
             <form onSubmit={handleEditSubmit} className="courses-page-form-container">
-              <input
-                type="text"
-                name="title"
-                placeholder="Course Title"
-                value={editFormData.title}
-                onChange={handleEditChange}
-                required
-              />
-              <textarea
-                name="description"
-                placeholder="Course Description"
-                value={editFormData.description}
-                onChange={handleEditChange}
-                required
-              />
-              <input
-                type="number"
-                name="duration"
-                placeholder="Duration (in years)"
-                value={editFormData.duration}
-                onChange={handleEditChange}
-                required
-              />
-              <input
-                type="number"
-                name="fee"
-                placeholder="Fee (in ₹)"
-                value={editFormData.fee}
-                onChange={handleEditChange}
-                required
-              />
-              <input
-                type="text"
-                name="requirement"
-                placeholder="Requirements"
-                value={editFormData.requirement}
-                onChange={handleEditChange}
-                required
-              />
-              <input
-                type="text"
-                name="contact"
-                placeholder="Contact Details"
-                value={editFormData.contact}
-                onChange={handleEditChange}
-                required
-              />
-              <input
-                type="text"
-                name="subjectCode"
-                placeholder="Subject Code"
-                value={editFormData.subjectCode}
-                onChange={handleEditChange}
-                required
-              />
-              <input
-                type="email"
-                name="assignedTo"
-                placeholder="Assigned Content Admin Email"
-                value={editFormData.assignedTo}
-                onChange={handleEditChange}
-                required
-              />
-              <input
-                type="date"
-                name="deadline"
-                placeholder="Application Deadline"
-                value={editFormData.deadline}
-                onChange={handleEditChange}
-              />
+              <input type="text" name="title" placeholder="Course Title" value={editFormData.title} onChange={handleEditChange} required />
+              <textarea name="description" placeholder="Course Description" value={editFormData.description} onChange={handleEditChange} required />
+              <input type="number" name="duration" placeholder="Duration (in years)" value={editFormData.duration} onChange={handleEditChange} required />
+              <input type="number" name="fee" placeholder="Fee (in ₹)" value={editFormData.fee} onChange={handleEditChange} required />
+              <input type="text" name="requirement" placeholder="Requirements" value={editFormData.requirement} onChange={handleEditChange} required />
+              <input type="text" name="contact" placeholder="Contact Details" value={editFormData.contact} onChange={handleEditChange} required />
+              <input type="text" name="subjectCode" placeholder="Subject Code" value={editFormData.subjectCode} onChange={handleEditChange} required />
+              <input type="email" name="assignedTo" placeholder="Assigned Content Admin Email" value={editFormData.assignedTo} onChange={handleEditChange} required />
+              <input type="date" name="deadline" placeholder="Application Deadline" value={editFormData.deadline} onChange={handleEditChange} />
               <div className="courses-page-modal-btns">
-                <button type="submit" className="courses-page-modal-btn courses-page-modal-btn-save">
-                  Save Changes
-                </button>
-                <button
-                  type="button"
-                  className="courses-page-modal-btn courses-page-modal-btn-cancel"
-                  onClick={() => setEditCourse(null)}
-                >
-                  Cancel
-                </button>
+                <button type="submit" className="courses-page-modal-btn courses-page-modal-btn-save">Save Changes</button>
+                <button type="button" className="courses-page-modal-btn courses-page-modal-btn-cancel" onClick={() => setEditCourse(null)}>Cancel</button>
               </div>
             </form>
           </div>
